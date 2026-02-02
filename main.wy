@@ -1,0 +1,4 @@
+func main() :: Int{
+    let x :: Int = 0;
+    exit x;
+}
