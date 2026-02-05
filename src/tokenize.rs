@@ -22,29 +22,33 @@ impl Default for Token {
         }
     }
 }
-
+#[derive(Clone)]
 struct Token {
     t_type: Option<TokenType>,
-    value: Option<String>,
+    value: String,
 }
 
 fn tokenize(input: String) -> Vec<Token> {
     let mut tokens: Vec<Token> = Default::default();
     let mut token_buffer: Token = Default::default();
-    let mut buffer: String = Default::default();
-    for index in 0..input.len() {
-        if buffer == "func" {
-            token_buffer.t_type = Some(TokenType::Function);
-            buffer.clear();
-        }
-        if !input.chars().nth(index).unwrap().is_whitespace()
-            && input.chars().nth(index).unwrap() != ' '
-        {
-            buffer.push(input.chars().nth(index).unwrap());
-        }
-        if token_buffer.t_type.is_some() {
+    let mut has_type: bool = false;
+    for character in input.chars() {
+        if has_type {
+            token_buffer.value.push(character);
+        } else if (character == ';') {
             tokens.push(token_buffer);
-            token_buffer = Default::default();
+        } else {
+            if &token_buffer.value == "func" {
+                token_buffer.t_type = Some(TokenType::Function);
+                has_type = true;
+            }
+            if !character.is_ascii_whitespace() && character != ' ' {
+                token_buffer.value.push(character);
+            }
+            if token_buffer.t_type.is_some() {
+                tokens.push(token_buffer);
+                token_buffer = Default::default();
+            }
         }
     }
     return tokens;
