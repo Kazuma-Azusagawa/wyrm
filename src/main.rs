@@ -1,4 +1,4 @@
-pub mod tokenize;
+//pub mod tokenize;
 
 fn main() {
     let arg = std::env::args().nth(1).expect("No file path given\n");
