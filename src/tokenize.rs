@@ -8,7 +8,8 @@ enum TokenType {
     BracketRight, // )
     LiteralInt,
     LiteralString,
-    Variable,   // let
+    Variable, // let
+    VariableValue,
     TypeDefine, // ::
     SemiColon,  // ;
     Exit,       // exit
@@ -29,37 +30,55 @@ struct Token {
 }
 
 fn tokenize(input: &str) -> Vec<Token> {
-    let mut tokens = Vec::new();
+    let mut tokens: Vec<Token> = Default::default();
+    let mut token = Token::default();
     let mut buffer = String::new();
-    let mut flush = |buffer: &mut String, tokens: &mut Vec<Token>| {
-        if buffer.is_empty() {
-            return;
-        }
-        let t_type = match buffer.as_str() {
-            "func" => Some(TokenType::Function),
-            "{" => Some(TokenType::BraceLeft),
-            "}" => Some(TokenType::BraceRight),
-            "(" => Some(TokenType::BracketLeft),
-            ")" => Some(TokenType::BracketRight),
-            ";" => Some(TokenType::SemiColon),
-            "::" => Some(TokenType::TypeDefine),
-            "let" => Some(TokenType::Variable),
-            _ => None,
-        };
-        tokens.push(Token {
-            value: buffer.clone(),
-            t_type,
-        });
-        buffer.clear();
-    };
-
     for c in input.chars() {
-        match c {
-            ';' => flush(&mut buffer, &mut tokens),
-            c if c.is_whitespace() => flush(&mut buffer, &mut tokens),
-            _ => buffer.push(c),
+        if c != ' ' && c != ';' {
+            buffer.push(c);
+        } else {
+            token = match buffer.as_str() {
+                "func" => Token {
+                    t_type: Some(TokenType::Function),
+                    value: buffer,
+                },
+                "::" => Token {
+                    t_type: Some(TokenType::TypeDefine),
+                    value: buffer,
+                },
+                "{" => Token {
+                    t_type: Some(TokenType::BraceLeft),
+                    value: buffer,
+                },
+                "}" => Token {
+                    t_type: Some(TokenType::BraceRight),
+                    value: buffer,
+                },
+                "(" => Token {
+                    t_type: Some(TokenType::BracketLeft),
+                    value: buffer,
+                },
+                ")" => Token {
+                    t_type: Some(TokenType::BracketRight),
+                    value: buffer,
+                },
+                "exit" => Token {
+                    t_type: Some(TokenType::Exit),
+                    value: buffer,
+                },
+                "let" => Token {
+                    t_type: Some(TokenType::Variable),
+                    value: buffer,
+                },
+                _ => Token {
+                    t_type: Some(TokenType::ProgramError),
+                    value: buffer,
+                },
+            };
+            tokens.push(token);
+            token = Default::default();
+            buffer.clear();
         }
     }
-    flush(&mut buffer, &mut tokens);
-    tokens
+    return tokens;
 }
