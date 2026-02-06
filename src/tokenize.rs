@@ -28,28 +28,38 @@ struct Token {
     value: String,
 }
 
-fn tokenize(input: String) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Default::default();
-    let mut token_buffer: Token = Default::default();
-    let mut has_type: bool = false;
-    for character in input.chars() {
-        if has_type {
-            token_buffer.value.push(character);
-        } else if (character == ';') {
-            tokens.push(token_buffer);
-        } else {
-            if &token_buffer.value == "func" {
-                token_buffer.t_type = Some(TokenType::Function);
-                has_type = true;
-            }
-            if !character.is_ascii_whitespace() && character != ' ' {
-                token_buffer.value.push(character);
-            }
-            if token_buffer.t_type.is_some() {
-                tokens.push(token_buffer);
-                token_buffer = Default::default();
-            }
+fn tokenize(input: &str) -> Vec<Token> {
+    let mut tokens = Vec::new();
+    let mut buffer = String::new();
+    let mut flush = |buffer: &mut String, tokens: &mut Vec<Token>| {
+        if buffer.is_empty() {
+            return;
+        }
+        let t_type = match buffer.as_str() {
+            "func" => Some(TokenType::Function),
+            "{" => Some(TokenType::BraceLeft),
+            "}" => Some(TokenType::BraceRight),
+            "(" => Some(TokenType::BracketLeft),
+            ")" => Some(TokenType::BracketRight),
+            ";" => Some(TokenType::SemiColon),
+            "::" => Some(TokenType::TypeDefine),
+            "let" => Some(TokenType::Variable),
+            _ => None,
+        };
+        tokens.push(Token {
+            value: buffer.clone(),
+            t_type,
+        });
+        buffer.clear();
+    };
+
+    for c in input.chars() {
+        match c {
+            ';' => flush(&mut buffer, &mut tokens),
+            c if c.is_whitespace() => flush(&mut buffer, &mut tokens),
+            _ => buffer.push(c),
         }
     }
-    return tokens;
+    flush(&mut buffer, &mut tokens);
+    tokens
 }
